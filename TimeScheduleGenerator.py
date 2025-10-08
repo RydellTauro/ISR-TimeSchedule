@@ -98,7 +98,7 @@ def generate_schedule_html():
         comp = str(r.iloc[COL_FAHRTNAME]).strip()
         if not comp:
             continue
-        start_time = r.iloc[:, COL_START]
+        start_time = r.iloc[COL_START]  # ✅ fixed here
         if pd.isna(start_time):
             continue
 
@@ -156,7 +156,7 @@ def generate_schedule_html():
 
         if b["StationRight"]:
             annotations.append(dict(
-                x=b["Ende"] - pd.to_timedelta('00:00:30'),  # fixed quote
+                x=b["Ende"] - pd.to_timedelta('00:00:30'),
                 y=comp_label,
                 text=b["StationRight"],
                 showarrow=False,
@@ -219,7 +219,7 @@ def generate_schedule_html():
 
     html_str += composition_html
 
-    # Save HTML file with your desired name
+    # Save HTML file with colored1 suffix
     output_file = "time_schedule_gantt_colored1.html"
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(html_str)
