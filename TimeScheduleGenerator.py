@@ -1,4 +1,3 @@
-# TimeScheduleGenerator.py
 import pandas as pd
 import plotly.graph_objects as go
 import re
@@ -50,13 +49,13 @@ def color_for_zugklasse(z):
         return "#7f7f7f"
     z = str(z).strip()
     if z == "NRz":
-        return "#2171b5"   
+        return "#2171b5"
     if z == "Lz":
-        return "#238b45"   
-    return "#525252"       
+        return "#238b45"
+    return "#525252"
 
-def generate_schedule():
-    # Read Excel
+def generate_schedule_html():
+    """Generates the Gantt chart and composition list as an HTML string"""
     lauf = pd.read_excel(EXCEL_PATH, sheet_name=SHEET_LAUF, header=START_ROW, engine="openpyxl")
     verkn = pd.read_excel(EXCEL_PATH, sheet_name=SHEET_VERKN, header=2, engine="openpyxl")
     zugliste = pd.read_excel(EXCEL_PATH, sheet_name=SHEET_ZUG, header=0, engine="openpyxl")
@@ -97,7 +96,7 @@ def generate_schedule():
         comp = str(r.iloc[COL_FAHRTNAME]).strip()
         if not comp:
             continue
-        start_time = r.iloc[COL_START]
+        start_time = r.iloc[:, COL_START]
         if pd.isna(start_time):
             continue
 
@@ -106,7 +105,7 @@ def generate_schedule():
             dur = parse_duration(r.iloc[col_idx])
             if dur <= pd.Timedelta(0):
                 continue
-            if i % 2 == 0:  
+            if i % 2 == 0:
                 seg_start = t_cursor
                 seg_end = t_cursor + dur
                 trip_number = 2 + i // 2
@@ -124,7 +123,7 @@ def generate_schedule():
                     "Zugklasse": zugklasse
                 })
                 t_cursor = seg_end
-            else:  
+            else:
                 t_cursor += dur
 
     unique_comps = sorted(list({b["Y"] for b in balken}), key=extract_number)
@@ -154,7 +153,7 @@ def generate_schedule():
             ))
         if b["StationRight"]:
             annotations.append(dict(
-                x=b["Ende"] - pd.to_timedelta('00:00:30'),
+                x=b["Ende'] - pd.to_timedelta('00:00:30'),
                 y=comp_label,
                 text=b["StationRight"],
                 showarrow=False,
@@ -206,17 +205,14 @@ def generate_schedule():
     for comp in composition_lists:
         composition_lists[comp] = [name for _, name in sorted(composition_lists[comp], key=lambda x: x[0])]
 
-    html_filename = "time_schedule_gantt_colored1.html"
-    fig.write_html(html_filename, include_plotlyjs='cdn', full_html=True)
+    # generate HTML in memory
+    html_str = fig.to_html(include_plotlyjs='cdn', full_html=True)
+    composition_html = '<h2 style="font-size:20px;"><b>Trains in the Compositions</b></h2>\n'
+    for comp in sorted(composition_lists.keys(), key=extract_number):
+        dist_km = composition_distances.get(comp, 0)
+        composition_html += f"<b>{comp} ({dist_km} km):</b> "
+        composition_html += " -> ".join(composition_lists[comp])
+        composition_html += "<br>\n"
 
-    with open(html_filename, 'a', encoding='utf-8') as f:
-        f.write('<h2 style="font-size:20px;"><b>Trains in the Compositions</b></h2>\n')
-        for comp in sorted(composition_lists.keys(), key=extract_number):
-            dist_km = composition_distances.get(comp, 0)
-            f.write(f"<b>{comp} ({dist_km} km):</b> ")
-            f.write(" -> ".join(composition_lists[comp]))
-            f.write("<br>\n")
-
-    return html_filename
-
-
+    html_str += composition_html
+    return html_str
