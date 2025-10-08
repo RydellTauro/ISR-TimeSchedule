@@ -1,31 +1,30 @@
 import streamlit as st
-import subprocess
+import TimeScheduleGenerator as tsg
 import os
 
-st.title("Train Schedule App")
+st.title("Train Schedule Generator")
+
+st.write("Click the button to generate the train schedule Gantt chart:")
 
 if st.button("Generate Schedule"):
-    # Run your TimeScheduleGenerator.py
-    result = subprocess.run(
-        ["python", "TimeScheduleGenerator.py"],
-        capture_output=True,
-        text=True
-    )
-    st.text("Output:")
-    st.text(result.stdout)
-    st.text(result.stderr)
-
-    # Display the HTML if generated
-    html_file = "time_schedule_gantt_colored1.html"
-    if os.path.exists(html_file):
+    try:
+        html_file = tsg.generate_schedule()
+        
+        # Display chart in browser
         with open(html_file, "r", encoding="utf-8") as f:
             html_content = f.read()
-        st.components.v1.html(html_content, height=800, scrolling=True)
+            st.components.v1.html(html_content, height=800, scrolling=True)
 
-with open("time_schedule_gantt_colored1.html", "rb") as f:
-    st.download_button(
-        label="Download Schedule HTML",
-        data=f,
-        file_name="time_schedule_gantt_colored.html",
-        mime="text/html"
-    )
+        # Download button
+        with open(html_file, "rb") as f:
+            st.download_button(
+                label="Download Schedule HTML",
+                data=f,
+                file_name=html_file,
+                mime="text/html"
+            )
+
+        st.success("Schedule generated successfully!")
+
+    except Exception as e:
+        st.error(f"Error generating schedule: {e}")
