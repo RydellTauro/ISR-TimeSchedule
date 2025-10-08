@@ -22,7 +22,7 @@ if st.button("Generate Schedule"):
             html_content = f.read()
         st.components.v1.html(html_content, height=800, scrolling=True)
 
-with open("time_schedule_gantt_colored.html", "rb") as f:
+with open("time_schedule_gantt_colored1.html", "rb") as f:
     st.download_button(
         label="Download Schedule HTML",
         data=f,
