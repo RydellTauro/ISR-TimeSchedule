@@ -1,3 +1,4 @@
+# TimeScheduleGenerator.py
 import pandas as pd
 import plotly.graph_objects as go
 import re
@@ -56,6 +57,7 @@ def color_for_zugklasse(z):
 
 def generate_schedule_html():
     """Generates the Gantt chart and composition list as an HTML string"""
+    # Read Excel
     lauf = pd.read_excel(EXCEL_PATH, sheet_name=SHEET_LAUF, header=START_ROW, engine="openpyxl")
     verkn = pd.read_excel(EXCEL_PATH, sheet_name=SHEET_VERKN, header=2, engine="openpyxl")
     zugliste = pd.read_excel(EXCEL_PATH, sheet_name=SHEET_ZUG, header=0, engine="openpyxl")
@@ -151,9 +153,10 @@ def generate_schedule_html():
                 xanchor="left",
                 yanchor="middle"
             ))
+
         if b["StationRight"]:
             annotations.append(dict(
-                x=b["Ende'] - pd.to_timedelta('00:00:30'),
+                x=b["Ende"] - pd.to_timedelta('00:00:30'),  # fixed quote
                 y=comp_label,
                 text=b["StationRight"],
                 showarrow=False,
@@ -205,7 +208,7 @@ def generate_schedule_html():
     for comp in composition_lists:
         composition_lists[comp] = [name for _, name in sorted(composition_lists[comp], key=lambda x: x[0])]
 
-    # generate HTML in memory
+    # Generate HTML string
     html_str = fig.to_html(include_plotlyjs='cdn', full_html=True)
     composition_html = '<h2 style="font-size:20px;"><b>Trains in the Compositions</b></h2>\n'
     for comp in sorted(composition_lists.keys(), key=extract_number):
@@ -215,4 +218,10 @@ def generate_schedule_html():
         composition_html += "<br>\n"
 
     html_str += composition_html
+
+    # Save HTML file with your desired name
+    output_file = "time_schedule_gantt_colored1.html"
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(html_str)
+
     return html_str
